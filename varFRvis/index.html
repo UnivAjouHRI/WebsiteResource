@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<!-- Load d3.js -->
+<script src="https://d3js.org/d3.v4.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script> 
+
+<!-- Create a div where the graph will take place -->
+<div id="my_dataviz"></div>
+
+<script>
+
+// set the dimensions and margins of the graph
+var margin = {top: 100, right: 30, bottom: 100, left: 50},
+  width = $(window).width() - margin.left - margin.right,
+  height = $(window).height() - margin.top - margin.bottom;
+
+// append the svg object to the body of the page
+var svg = d3.select("#my_dataviz")
+.append("svg")
+  .attr("width", width + margin.left + margin.right)
+  .attr("height", height + 30 + 30)
+.append("g")
+  .attr("transform",
+        "translate(" + margin.left + "," + 30 + ")");
+
+// Labels of row and columns
+var myGroups = ["전체순번","年度","面名","면명","順番","里順","里名","리명","統","統首","통수","戶","主戶","주호","新戶","신호","代戶","대호","戶內位相","호내위상","職役","직역","姓","성","名","명","改名","개명","年齡","干支","간지","出入","출입","場所","장소","本","본","本貫","본관","主居","주거","主職役","주직역","主姓名","주성명","父職役","부직역","父名","부명","生父職役","생부직역","生父名","생부명","母職役","모직역","母名","모명","所生","祖職役","조직역","祖名","조명","曾祖職役","증조직역","曾祖名","증조명","外祖職役","외조직역","外祖名","외조명","外本","외본","備考"]
+var myVars = ["1681","1684","1687","1690","1696","1702","1705","1708","1711","1714","1717","1720","1723","1726","1729","1732","1735","1738","1741","1744","1747","1750","1753","1756","1759","1762","1765","1768","1774","1777","1780","1783","1786","1789","1792","1795","1798","1801","1804","1807","1810","1813","1816","1819","1822","1825","1828","1831","1834","1837","1840","1843","1846","1852","1855","1858","1861","1864","1867","1870","1876","전체연도"]
+
+// Build X scales and axis:
+var x = d3.scaleBand()
+  .range([ 0, width ])
+  .domain(myGroups)
+  .padding(0.01);
+svg.append("g")
+  .attr("transform", "translate(0," + height + ")")
+  .call(d3.axisBottom(x))
+  .style("font-size", "11px")
+
+// Build X scales and axis:
+var y = d3.scaleBand()
+  .range([ height, 0 ])
+  .domain(myVars)
+  .padding(0.01);
+svg.append("g")
+  .call(d3.axisLeft(y))
+  .style("font-size", "11px");
+
+// Build color scale
+var myColor = d3.scaleLinear()
+  .range(["white", "#69b3a2"])
+  .domain([1,100])
+
+//Read the data
+d3.csv("./dataForVis.csv", function(data) {
+
+  // create a tooltip
+  var tooltip = d3.select("#my_dataviz")
+    .append("div")
+    .style("opacity", 0)
+    .attr("class", "tooltip")
+    .style("background-color", "white")
+    .style("border", "solid")
+    .style("border-width", "2px")
+    .style("border-radius", "5px")
+    .style("padding", "5px")
+
+  // Three function that change the tooltip when user hover / move / leave a cell
+  var mouseover = function(d) {
+    tooltip.style("opacity", 1)
+  }
+  var mousemove = function(d) {
+    tooltip
+      .html("선택된 좌표의 정보<br>연도: " + d.year + "<br>변수명: " + d.variable + "<br>단어 빈도 값: " + d.count)
+      .style("left", (d3.mouse(this)[0]+70) + "px")
+      .style("top", (d3.mouse(this)[1]) + "px")
+  }
+  var mouseleave = function(d) {
+    tooltip.style("opacity", 0)
+  }
+
+  // add the squares
+  svg.selectAll()
+    .data(data, function(d) {return d.variable+':'+d.year;})
+    .enter()
+    .append("rect")
+      .attr("x", function(d) { return x(d.variable) })
+      .attr("y", function(d) { return y(d.year) })
+      .attr("width", x.bandwidth() )
+      .attr("height", y.bandwidth() )
+      .style("fill", function(d) { return myColor(d.count*0.02)} )
+    .on("mouseover", mouseover)
+    .on("mousemove", mousemove)
+    .on("mouseleave", mouseleave)
+})
+
+</script>
